@@ -102,7 +102,7 @@ Worldcup/
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/worldcup-2026-predictor.git
+git clone https://github.com/ELnathangeb/worldcup-2026-predictor.git
 cd worldcup-2026-predictor
 pip install -r requirements.txt
 ```

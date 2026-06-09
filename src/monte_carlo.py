@@ -302,7 +302,7 @@ def generate_charts(df: pd.DataFrame, fig_dir: Path) -> None:
     plt.savefig(fig_dir / "group_advancement_heatmap.png", dpi=150, bbox_inches="tight")
     plt.close()
 
-    logger.info(f"Charts saved → {fig_dir}")
+    logger.info(f"Charts saved → {fig_dir.relative_to(ROOT)}")
 
 
 # ---------------------------------------------------------------------------
@@ -462,7 +462,7 @@ def generate_report(
     ]
 
     report_path.write_text("\n".join(lines), encoding="utf-8")
-    logger.info(f"Report saved → {report_path}")
+    logger.info(f"Report saved → {report_path.relative_to(ROOT)}")
 
 
 # ---------------------------------------------------------------------------
@@ -509,7 +509,7 @@ def main(n: int = 10_000, seed: int | None = None, quick: bool = False) -> None:
     df.to_csv(results_path, index=False)
     json_path = out_dir / "monte_carlo_results.json"
     df.to_json(json_path, orient="records", indent=2)
-    logger.info(f"Monte Carlo results saved → {results_path}")
+    logger.info(f"Monte Carlo results saved → {results_path.relative_to(ROOT)}")
 
     # Print top 20
     print(f"\n{'─'*72}")
