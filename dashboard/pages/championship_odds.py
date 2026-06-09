@@ -1,4 +1,4 @@
-"""Page 5 — Championship Odds: Monte Carlo results visualised."""
+"""Championship Odds — Monte Carlo leaderboard and charts."""
 from __future__ import annotations
 import sys
 from pathlib import Path
@@ -11,260 +11,277 @@ import plotly.express as px
 import pandas as pd
 import numpy as np
 
-from utils import load_monte_carlo, load_elo, page_header, COLORS, CONF_COLORS, confederation_map
+from utils import (
+    load_monte_carlo, load_elo, page_header, section_title, kpi,
+    COLORS, CHART, CONF_COLORS, confederation_map,
+)
+
+_CONF_CSS = {
+    "UEFA":"#38BDF8","CONMEBOL":"#34D399","CONCACAF":"#FCD34D",
+    "CAF":"#F87171","AFC":"#A78BFA","OFC":"#FB923C",
+}
 
 
 def render() -> None:
-    page_header(
-        "Championship Odds",
-        "Monte Carlo simulation results — 10,000 full tournament runs",
-    )
+    page_header("Championship Odds", "10,000 independent full-tournament Monte Carlo simulations")
 
     mc   = load_monte_carlo()
     elo  = load_elo()
     conf = confederation_map()
 
     if mc.empty:
-        st.error("Monte Carlo results not found at `outputs/monte_carlo_results.csv`. "
-                 "Run `python src/monte_carlo.py` first.")
+        st.error("Run `python src/monte_carlo.py` first to generate results.")
         return
 
-    # Enrich with Elo and confederation
+    mc = mc.copy()
     mc["elo"]  = mc["team"].map(lambda t: elo.get(t, 1500))
     mc["conf"] = mc["team"].map(lambda t: conf.get(t, "OFC"))
+    mc["pct_final"] = mc.get("pct_final", mc.get("pct_runner_up", 0.0))
 
-    # ── Summary KPIs ─────────────────────────────────────────────────────────
-    top1  = mc.iloc[0]
-    top3  = mc.head(3)
-    n_sim = 10_000  # stored assumption
+    top1 = mc.iloc[0]
 
+    # ── KPI strip ──────────────────────────────────────────────────────────────
     k1, k2, k3, k4, k5 = st.columns(5)
-    k1.metric("Simulations Run",     f"{n_sim:,}")
-    k2.metric("Top Favourite",       top1["team"],    delta=f"{top1['pct_champion']:.1f}% chance")
-    k3.metric("Avg Teams Past R32",  f"{(mc['pct_round_of_32'] > 0).sum()}")
-    k4.metric("Avg Champion Odds",   f"{100/len(mc):.2f}% (uniform)")
-    k5.metric("Most SF Appearances", mc.nlargest(1,"pct_semifinal").iloc[0]["team"],
-              delta=f"{mc.nlargest(1,'pct_semifinal').iloc[0]['pct_semifinal']:.1f}% SF rate")
+    k1.markdown(kpi("10,000",         "Simulations",     accent="#38BDF8"), unsafe_allow_html=True)
+    k2.markdown(kpi(top1["team"],      "Top Favourite",   delta=f"{top1['pct_champion']:.1f}% odds",
+                    accent="#FCD34D"), unsafe_allow_html=True)
+    k3.markdown(kpi(f"{top1['pct_semifinal']:.0f}%", f"{top1['team'][:10]} SF Rate",
+                    accent="#A78BFA"), unsafe_allow_html=True)
+    k4.markdown(kpi(f"{100/48:.1f}%", "Uniform Baseline", delta="per team if equal",
+                    accent="#475569"), unsafe_allow_html=True)
+    k5.markdown(kpi(str(len(mc)),     "WC Teams",        accent="#34D399"), unsafe_allow_html=True)
 
-    st.markdown("---")
+    st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── Main chart + table ────────────────────────────────────────────────────
     tabs = st.tabs([
-        "🥇 Championship Odds", "🌍 All Stages", "🗺️ By Confederation",
-        "📊 Elo vs Odds", "📋 Full Table",
+        "🥇 Leaderboard", "📊 All Stages", "🗺️ Confederation", "📈 Elo vs Odds", "📋 Full Table"
     ])
 
-    # ── Tab 1: Top N championship bar ─────────────────────────────────────────
+    # ── Tab 1: Leaderboard ─────────────────────────────────────────────────────
     with tabs[0]:
-        n_show = st.slider("Show top N teams", min_value=5, max_value=48, value=20, step=1)
-        top_n = mc.head(n_show).copy()
+        col_main, col_podium = st.columns([3, 2], gap="large")
 
-        # Medal colouring: gold / silver / bronze / rest
-        def _medal_color(idx):
-            if idx == 0: return "#FFD700"
-            if idx == 1: return "#C0C0C0"
-            if idx == 2: return "#CD7F32"
-            return COLORS["primary"]
-        top_n["color"] = [_medal_color(i) for i in range(len(top_n))]
+        with col_main:
+            section_title("Championship Probability Ranking")
+            n_show = st.slider("Show top N teams", 5, 48, 20, key="odds_n")
+            top_n  = mc.head(n_show)
+            max_pct = top_n["pct_champion"].max()
 
-        fig = go.Figure(go.Bar(
-            x=top_n["pct_champion"][::-1],
-            y=top_n["team"][::-1],
-            orientation="h",
-            marker_color=top_n["color"][::-1].tolist(),
-            text=[f"{v:.1f}%" for v in top_n["pct_champion"][::-1]],
-            textposition="outside",
-            hovertemplate="<b>%{y}</b><br>Championship: %{x:.2f}%<extra></extra>",
-        ))
-        fig.update_layout(
-            height=max(340, n_show * 22),
-            plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-            margin=dict(l=0, r=80, t=20, b=0),
-            xaxis=dict(title="Championship Probability (%)", showgrid=True, gridcolor="#F0F0F0"),
-            yaxis=dict(tickfont=dict(size=11, color="#1E3A5F")),
-        )
-        st.plotly_chart(fig, use_container_width=True)
+            rank_meta = {1:("🥇","#FCD34D"), 2:("🥈","#94A3B8"), 3:("🥉","#FB923C")}
 
-        # Podium cards
-        st.markdown('<div class="section-header">Podium Favourites</div>',
-                    unsafe_allow_html=True)
-        p1, p2, p3 = st.columns(3)
-        medals = ["🥇", "🥈", "🥉"]
-        for col, medal, (_, row) in zip([p1, p2, p3], medals, mc.head(3).iterrows()):
-            col.markdown(f"""
-            <div class="metric-card" style='text-align:center;'>
-                <div style='font-size:2.5rem;'>{medal}</div>
-                <div style='font-size:1.3rem; font-weight:800; color:#1E3A5F;'>{row['team']}</div>
-                <div style='font-size:1.6rem; font-weight:700; color:#C8102E; margin:4px 0;'>
-                    {row['pct_champion']:.1f}%
+            rows_html = ""
+            for i, (_, row) in enumerate(top_n.iterrows(), 1):
+                icon, hl = rank_meta.get(i, ("", "#1C2E4A"))
+                cc       = _CONF_CSS.get(row["conf"], "#475569")
+                bar_w    = max(2, int(row["pct_champion"] / max_pct * 100))
+                rows_html += f"""
+                <div class='lb-row'>
+                    <div class='lb-rank {"gold" if i==1 else "silver" if i==2 else "bronze" if i==3 else ""}'>
+                        {icon or i}
+                    </div>
+                    <div class='lb-team'>{row['team']}</div>
+                    <div style='flex:2;padding:0 12px;'>
+                        <div style='background:rgba(255,255,255,0.05);border-radius:4px;height:6px;'>
+                            <div style='width:{bar_w}%;height:100%;border-radius:4px;
+                                        background:linear-gradient(90deg,{cc}88,{cc});
+                                        box-shadow:0 0 6px {cc}44;'></div>
+                        </div>
+                    </div>
+                    <div style='display:flex;align-items:center;gap:10px;min-width:180px;
+                                justify-content:flex-end;'>
+                        <span class='lb-value' style='color:{cc};'>{row['pct_champion']:.1f}%</span>
+                        <span style='font-size:0.68rem;color:#334155;min-width:52px;'>
+                            {row['pct_semifinal']:.0f}% SF
+                        </span>
+                        <span class='conf-badge' style='background:{cc}22;color:{cc};
+                                                        border:1px solid {cc}44;font-size:0.6rem;'>
+                            {row['conf'][:4]}
+                        </span>
+                    </div>
+                </div>"""
+
+            st.markdown(f"""
+            <div class='glass-card' style='padding:8px 0;'>
+                <div style='display:flex;padding:6px 16px 6px;font-size:0.6rem;font-weight:700;
+                            color:#334155;text-transform:uppercase;letter-spacing:0.1em;'>
+                    <div style='width:24px;text-align:center;'>#</div>
+                    <div style='flex:1;margin-left:14px;'>Team</div>
+                    <div style='flex:2;padding:0 12px;'>Odds bar</div>
+                    <div style='min-width:180px;text-align:right;'>Champion · SF · Conf</div>
                 </div>
-                <div style='font-size:0.78rem; color:#6B7280;'>
-                    SF: {row['pct_semifinal']:.1f}% &nbsp;|&nbsp;
-                    Final: {row['pct_final']:.1f}%
-                </div>
-                <div style='font-size:0.75rem; color:#9CA3AF; margin-top:4px;'>
-                    Elo: {row['elo']:.0f}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+                {rows_html}
+            </div>""", unsafe_allow_html=True)
 
-    # ── Tab 2: All stages stacked bar ─────────────────────────────────────────
+        with col_podium:
+            section_title("Podium")
+            medals = [
+                ("🥇", mc.iloc[0], "#FCD34D", "Champion Favourite"),
+                ("🥈", mc.iloc[1], "#94A3B8", "2nd Favourite"),
+                ("🥉", mc.iloc[2], "#FB923C", "3rd Favourite"),
+            ]
+            for medal, row, color, sublabel in medals:
+                st.markdown(f"""
+                <div style='
+                    background:linear-gradient(135deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));
+                    border:1px solid {color}44;border-top:2px solid {color};
+                    border-radius:14px;padding:18px 20px;margin-bottom:10px;
+                    box-shadow:0 0 24px {color}11;
+                '>
+                    <div style='display:flex;align-items:center;gap:14px;'>
+                        <div style='font-size:2rem;'>{medal}</div>
+                        <div style='flex:1;'>
+                            <div style='font-size:1.05rem;font-weight:800;color:#F1F5F9;'>{row["team"]}</div>
+                            <div style='font-size:0.7rem;color:#475569;margin-top:2px;'>{sublabel}</div>
+                        </div>
+                        <div style='text-align:right;'>
+                            <div style='font-size:1.6rem;font-weight:900;color:{color};'>{row["pct_champion"]:.1f}%</div>
+                            <div style='font-size:0.68rem;color:#334155;'>SF: {row["pct_semifinal"]:.0f}%</div>
+                        </div>
+                    </div>
+                    <div style='margin-top:10px;padding-top:8px;border-top:1px solid #1C2E4A;
+                                display:flex;gap:8px;flex-wrap:wrap;'>
+                        <span style='font-size:0.7rem;color:#475569;'>
+                            Elo: <span style='color:#64748B;font-weight:600;'>{row["elo"]:.0f}</span>
+                        </span>
+                        <span style='font-size:0.7rem;color:#475569;'>
+                            Final: <span style='color:#64748B;font-weight:600;'>{row.get("pct_final", row.get("pct_runner_up",0)):.0f}%</span>
+                        </span>
+                        <span style='font-size:0.7rem;color:#475569;'>
+                            R32: <span style='color:#64748B;font-weight:600;'>{row["pct_round_of_32"]:.0f}%</span>
+                        </span>
+                    </div>
+                </div>""", unsafe_allow_html=True)
+
+    # ── Tab 2: All stages ──────────────────────────────────────────────────────
     with tabs[1]:
-        top20 = mc.head(20).copy()
-        stages = [
-            ("pct_champion",     "Champion",     "#FFD700"),
-            ("pct_final",        "Final",        "#C8102E"),
-            ("pct_semifinal",    "Semifinal",    "#1D4ED8"),
-            ("pct_quarterfinal", "Quarterfinal", "#3B82F6"),
-            ("pct_round_of_16",  "Round of 16",  "#60A5FA"),
-            ("pct_round_of_32",  "Round of 32",  "#BFDBFE"),
+        section_title("All Stages — Top 20 Teams")
+        top20 = mc.head(20)
+        stages_cfg = [
+            ("pct_champion",     "Champion",    "#FCD34D"),
+            ("pct_final",        "Final",       "#94A3B8"),
+            ("pct_semifinal",    "Semifinal",   "#A78BFA"),
+            ("pct_quarterfinal", "QF",          "#38BDF8"),
+            ("pct_round_of_16",  "R16",         "#34D399"),
+            ("pct_round_of_32",  "R32",         "#1C4A2E"),
         ]
         fig2 = go.Figure()
-        for col, label, color in stages:
+        for col, label, color in stages_cfg:
             if col in top20.columns:
                 fig2.add_trace(go.Bar(
-                    name=label,
-                    x=top20["team"],
-                    y=top20[col],
-                    marker_color=color,
+                    name=label, x=top20["team"], y=top20[col],
+                    marker=dict(color=color, line=dict(width=0)),
                     hovertemplate=f"<b>%{{x}}</b><br>{label}: %{{y:.1f}}%<extra></extra>",
                 ))
-        fig2.update_layout(
-            barmode="group",
-            height=440,
-            plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-            margin=dict(l=0, r=0, t=20, b=0),
-            xaxis=dict(tickangle=-35, tickfont=dict(size=10)),
-            yaxis=dict(title="Probability (%)", showgrid=True, gridcolor="#F0F0F0"),
-            legend=dict(orientation="h", yanchor="bottom", y=1),
-        )
+        fig2.update_layout(**{**CHART, "height": 420, "barmode": "group",
+                               "xaxis": dict(tickangle=-35, tickfont=dict(size=9)),
+                               "yaxis": dict(title="Probability (%)", gridcolor="rgba(255,255,255,0.04)"),
+                               "legend": dict(orientation="h", y=1.05, bgcolor="rgba(0,0,0,0)")})
         st.plotly_chart(fig2, use_container_width=True)
 
-    # ── Tab 3: Confederation view ──────────────────────────────────────────────
+    # ── Tab 3: Confederation ──────────────────────────────────────────────────
     with tabs[2]:
         conf_grp = mc.groupby("conf").agg(
-            avg_champion=("pct_champion", "mean"),
-            avg_sf=("pct_semifinal", "mean"),
-            n_teams=("team", "count"),
-            total_champion=("pct_champion", "sum"),
+            total_champion=("pct_champion","sum"),
+            avg_sf=("pct_semifinal","mean"),
+            n_teams=("team","count"),
         ).reset_index().sort_values("total_champion", ascending=False)
 
         col_l, col_r = st.columns(2)
         with col_l:
-            fig_c = px.bar(
-                conf_grp, x="conf", y="total_champion",
-                color="conf",
-                color_discrete_map={k: v for k, v in CONF_COLORS.items()},
-                title="Total Championship Share by Confederation",
-                text="total_champion",
-                labels={"total_champion": "Total Champ %", "conf": "Confederation"},
-            )
-            fig_c.update_traces(texttemplate="%{text:.1f}%", textposition="outside")
-            fig_c.update_layout(
-                height=340, showlegend=False,
-                plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-                margin=dict(l=0, r=0, t=40, b=0),
-            )
-            st.plotly_chart(fig_c, use_container_width=True)
+            section_title("Total Championship Share")
+            fig_cb = go.Figure(go.Bar(
+                x=conf_grp["conf"],
+                y=conf_grp["total_champion"],
+                marker=dict(
+                    color=[_CONF_CSS.get(c,"#475569") for c in conf_grp["conf"]],
+                    line=dict(width=0),
+                ),
+                text=[f"{v:.1f}%" for v in conf_grp["total_champion"]],
+                textposition="outside", textfont=dict(color="#64748B"),
+                hovertemplate="<b>%{x}</b><br>%{y:.1f}% total share<extra></extra>",
+            ))
+            fig_cb.update_layout(**{**CHART, "height": 300, "showlegend": False,
+                                    "yaxis": dict(title="% share", gridcolor="rgba(255,255,255,0.04)"),
+                                    "xaxis": dict(tickfont=dict(size=12, color="#64748B"))})
+            st.plotly_chart(fig_cb, use_container_width=True)
 
         with col_r:
-            fig_pie = go.Figure(go.Pie(
+            section_title("Share by Confederation")
+            fig_dp = go.Figure(go.Pie(
                 labels=conf_grp["conf"],
                 values=conf_grp["total_champion"],
-                hole=0.45,
+                hole=0.5,
+                marker_colors=[_CONF_CSS.get(c,"#475569") for c in conf_grp["conf"]],
                 textinfo="label+percent",
-                marker_colors=[CONF_COLORS.get(c, "#9CA3AF") for c in conf_grp["conf"]],
+                textfont=dict(size=11, color="white"),
+                hovertemplate="<b>%{label}</b><br>%{value:.1f}%<extra></extra>",
             ))
-            fig_pie.update_layout(
-                title="Championship Share (Pie)",
-                height=340, showlegend=False,
-                margin=dict(l=0, r=0, t=40, b=0),
-                paper_bgcolor="rgba(0,0,0,0)",
-            )
-            st.plotly_chart(fig_pie, use_container_width=True)
+            fig_dp.update_layout(**{**CHART, "height": 300, "showlegend": False})
+            st.plotly_chart(fig_dp, use_container_width=True)
 
-        # Per-confederation top teams
-        st.markdown('<div class="section-header">Top Team per Confederation</div>',
-                    unsafe_allow_html=True)
-        cols_conf = st.columns(len(conf_grp))
+        # Per-conf best team
+        section_title("Top Team per Confederation")
+        cols_c = st.columns(len(conf_grp))
         for i, (_, row) in enumerate(conf_grp.iterrows()):
             best = mc[mc["conf"] == row["conf"]].head(1).iloc[0]
-            conf_color = CONF_COLORS.get(row["conf"], "#1E3A5F")
-            with cols_conf[i]:
+            cc   = _CONF_CSS.get(row["conf"], "#475569")
+            with cols_c[i]:
                 st.markdown(f"""
-                <div class="metric-card" style='border-top:3px solid {conf_color};'>
-                    <div style='font-size:0.75rem; font-weight:700; color:{conf_color};
-                                letter-spacing:0.05em;'>{row['conf']}</div>
-                    <div style='font-size:1rem; font-weight:800; color:#1E3A5F;
-                                margin:4px 0;'>{best['team']}</div>
-                    <div style='font-size:1.2rem; color:#C8102E; font-weight:700;'>
+                <div style='background:rgba(255,255,255,0.02);border:1px solid {cc}33;
+                            border-top:2px solid {cc};border-radius:12px;
+                            padding:14px;text-align:center;'>
+                    <div style='font-size:0.62rem;font-weight:700;color:{cc};
+                                letter-spacing:0.1em;'>{row['conf']}</div>
+                    <div style='font-size:0.9rem;font-weight:800;color:#F1F5F9;
+                                margin:6px 0 2px;'>{best['team']}</div>
+                    <div style='font-size:1.2rem;color:{cc};font-weight:900;'>
                         {best['pct_champion']:.1f}%
                     </div>
-                    <div style='font-size:0.7rem; color:#9CA3AF;'>{int(row['n_teams'])} teams</div>
-                </div>
-                """, unsafe_allow_html=True)
+                    <div style='font-size:0.65rem;color:#334155;margin-top:4px;'>
+                        {int(row['n_teams'])} teams
+                    </div>
+                </div>""", unsafe_allow_html=True)
 
-    # ── Tab 4: Elo vs champion odds scatter ───────────────────────────────────
+    # ── Tab 4: Elo vs Odds ────────────────────────────────────────────────────
     with tabs[3]:
-        fig_s = px.scatter(
+        section_title("Elo Rating vs Championship Probability")
+        fig_sc = px.scatter(
             mc, x="elo", y="pct_champion",
             size="pct_semifinal",
             color="conf",
-            color_discrete_map={k: v for k, v in CONF_COLORS.items()},
+            color_discrete_map={k: v for k, v in _CONF_CSS.items()},
             hover_name="team",
-            title="Elo Rating vs Championship Probability",
-            labels={"elo": "Elo Rating", "pct_champion": "Championship %", "conf": "Confederation"},
+            labels={"elo":"Elo Rating","pct_champion":"Champion %","conf":"Confederation"},
             trendline="ols",
         )
-        fig_s.update_layout(
-            height=480,
-            plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-            margin=dict(l=0, r=0, t=40, b=0),
+        fig_sc.update_traces(
+            marker=dict(line=dict(width=0)),
+            selector=dict(mode="markers"),
         )
-        st.plotly_chart(fig_s, use_container_width=True)
-        st.caption("Bubble size = semifinal qualification rate. Trendline = OLS regression.")
-
-        # Biggest over/under performers vs Elo rank
-        mc_sorted_elo  = mc.sort_values("elo", ascending=False).reset_index(drop=True)
-        mc_sorted_odds = mc.sort_values("pct_champion", ascending=False).reset_index(drop=True)
-        mc_sorted_elo["elo_rank"]   = mc_sorted_elo.index + 1
-        mc_sorted_odds["odds_rank"] = mc_sorted_odds.index + 1
-        merged = mc_sorted_elo.merge(mc_sorted_odds[["team","odds_rank"]], on="team")
-        merged["rank_diff"] = merged["elo_rank"] - merged["odds_rank"]
-        overperformers  = merged.nlargest(5, "rank_diff")[["team","elo_rank","odds_rank","rank_diff"]]
-        underperformers = merged.nsmallest(5, "rank_diff")[["team","elo_rank","odds_rank","rank_diff"]]
-
-        col_o, col_u = st.columns(2)
-        with col_o:
-            st.markdown("**📈 Biggest Over-performers vs Elo**")
-            overperformers.columns = ["Team","Elo Rank","Odds Rank","Rank Jump"]
-            st.dataframe(overperformers, hide_index=True, use_container_width=True)
-        with col_u:
-            st.markdown("**📉 Biggest Under-performers vs Elo**")
-            underperformers.columns = ["Team","Elo Rank","Odds Rank","Rank Drop"]
-            underperformers["Rank Drop"] = underperformers["Rank Drop"].abs()
-            st.dataframe(underperformers, hide_index=True, use_container_width=True)
+        fig_sc.update_layout(**{**CHART, "height": 460,
+                                 "legend": dict(orientation="h", y=1.05, bgcolor="rgba(0,0,0,0)")})
+        st.plotly_chart(fig_sc, use_container_width=True)
+        st.caption("Bubble size = semifinal qualification rate.  OLS trendline shown.")
 
     # ── Tab 5: Full table ──────────────────────────────────────────────────────
     with tabs[4]:
-        st.markdown("**Full Monte Carlo Results — all 48 WC teams**")
-        display_cols = ["team","conf","elo","pct_champion","pct_final","pct_runner_up",
-                        "pct_semifinal","pct_quarterfinal","pct_round_of_16","pct_round_of_32"]
-        existing = [c for c in display_cols if c in mc.columns]
-        show_mc = mc[existing].copy()
-        show_mc.columns = [c.replace("pct_","").replace("_"," ").title() for c in existing]
+        section_title("Complete Results — All 48 WC Teams")
+        cols_show = ["team","conf","elo","pct_champion","pct_final","pct_runner_up",
+                     "pct_semifinal","pct_quarterfinal","pct_round_of_16","pct_round_of_32"]
+        existing  = [c for c in cols_show if c in mc.columns]
+        show      = mc[existing].copy()
+        show.columns = [c.replace("pct_","").replace("_"," ").title() for c in existing]
 
-        def highlight_champ(val):
+        def _hl(val):
             if isinstance(val, float) and val >= 5.0:
-                return "background-color:#FEF9C3; font-weight:700"
+                return "background-color:#1a1400;color:#FCD34D;font-weight:700"
             if isinstance(val, float) and val >= 2.0:
-                return "background-color:#FFF7ED"
+                return "background-color:#130f20;color:#A78BFA"
             return ""
 
         st.dataframe(
-            show_mc.style.applymap(highlight_champ, subset=["Champion"]) if "Champion" in show_mc.columns
-            else show_mc,
-            hide_index=True, use_container_width=True, height=540,
+            show.style.applymap(_hl, subset=["Champion"] if "Champion" in show.columns else []),
+            hide_index=True, use_container_width=True, height=560,
         )
-        st.caption(f"Sorted by championship probability. {n_sim:,} simulations run. "
-                   "All percentages = % of simulations where team reached that stage.")
+        st.caption("Sorted by championship probability.  10,000 simulations.  "
+                   "All % = share of simulations where team reached that stage.")
