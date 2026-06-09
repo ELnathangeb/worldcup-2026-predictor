@@ -1,0 +1,39 @@
+project:
+  name: "FIFA World Cup 2026 Prediction Model"
+  version: "1.0.0"
+
+paths:
+  raw_data: "data/raw"
+  processed_data: "data/processed"
+  external_data: "data/external"
+  models: "outputs/models"
+  predictions: "outputs/predictions"
+  visualizations: "outputs/visualizations"
+
+data:
+  # Kaggle dataset: international football results from 1872 to present
+  results_url: "https://raw.githubusercontent.com/martj42/international_results/master/results.csv"
+  shootouts_url: "https://raw.githubusercontent.com/martj42/international_results/master/shootouts.csv"
+  goalscorers_url: "https://raw.githubusercontent.com/martj42/international_results/master/goalscorers.csv"
+  # FIFA ranking data — samuraitruong/fifa-ranking-data (2019–present)
+  fifa_ranking_url: "https://raw.githubusercontent.com/samuraitruong/fifa-ranking-data/master/data/csv/all.csv"
+  training_start_year: 2000
+  test_split_year: 2022
+
+model:
+  target: "result"          # home_win / draw / away_win
+  random_state: 42
+  cv_folds: 5
+  early_stopping_rounds: 50
+
+simulation:
+  tournament_year: 2026
+  n_simulations: 10000      # Monte Carlo runs for bracket simulation
+  host_nations: ["USA", "Canada", "Mexico"]
+
+wc2026:
+  # 2026 World Cup has 48 teams in 12 groups of 4
+  n_groups: 12
+  teams_per_group: 4
+  teams_advancing_per_group: 2      # top 2 + 8 best 3rd-place teams = 32 in R32
+  total_teams: 48

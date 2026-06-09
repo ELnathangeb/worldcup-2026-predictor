@@ -1,0 +1,31 @@
+# FIFA World Cup 2026 — Official Group Draw (completed December 2024)
+# 48 teams across 12 groups (A–L)
+
+groups:
+  A: ["United States", "Panama", "Honduras", "Albania"]
+  B: ["Mexico", "Jamaica", "New Zealand", "Venezuela"]
+  C: ["Canada", "Morocco", "Croatia", "Belgium"]
+  D: ["Brazil", "DR Congo", "Egypt", "Serbia"]
+  E: ["Argentina", "Nigeria", "Chile", "Iran"]
+  F: ["Germany", "Colombia", "Uruguay", "Cameroon"]
+  G: ["Spain", "Japan", "Paraguay", "South Korea"]
+  H: ["France", "South Africa", "Ecuador", "Saudi Arabia"]
+  I: ["England", "Algeria", "Australia", "Slovakia"]
+  J: ["Portugal", "Bolivia", "Costa Rica", "Senegal"]
+  K: ["Netherlands", "Qatar", "Ivory Coast", "Guatemala"]
+  L: ["Switzerland", "Peru", "Greece", "Uzbekistan"]
+
+# Confederation mappings (used for strength priors)
+confederations:
+  UEFA: ["Albania", "Croatia", "Belgium", "Serbia", "Germany", "Spain",
+         "France", "England", "Portugal", "Netherlands", "Switzerland", "Greece",
+         "Slovakia"]
+  CONMEBOL: ["Venezuela", "Brazil", "Argentina", "Chile", "Colombia", "Uruguay",
+             "Ecuador", "Bolivia", "Peru", "Paraguay"]
+  CONCACAF: ["United States", "Panama", "Honduras", "Mexico", "Jamaica", "Canada",
+             "Costa Rica", "Guatemala"]
+  CAF: ["Morocco", "DR Congo", "Egypt", "Nigeria", "Cameroon", "South Africa",
+        "Algeria", "Ivory Coast", "Senegal"]
+  AFC: ["Iran", "Japan", "South Korea", "Saudi Arabia", "Australia", "Qatar",
+        "Uzbekistan"]
+  OFC: ["New Zealand"]

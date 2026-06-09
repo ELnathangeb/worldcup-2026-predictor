@@ -1,0 +1,48 @@
+feature,group,description,leakage_safe,missing_strategy,in_dataset,null_count
+home_rank,FIFA Rankings,Most recent FIFA world ranking of the home team before the match date.,True,Column median,True,0.0
+away_rank,FIFA Rankings,Most recent FIFA world ranking of the away team before the match date.,True,Column median,True,0.0
+home_fifa_pts,FIFA Rankings,FIFA ranking points of the home team at the most recent ranking release before the match.,True,Column median,True,0.0
+away_fifa_pts,FIFA Rankings,FIFA ranking points of the away team at the most recent ranking release before the match.,True,Column median,True,0.0
+rank_diff,FIFA Rankings,home_rank minus away_rank. Negative = home team is ranked higher (better). Key predictor of match outcome.,True,Column median,True,0.0
+fifa_pts_diff,FIFA Rankings,home_fifa_pts minus away_fifa_pts. Positive = home team has more points.,True,Column median,True,0.0
+home_elo,Elo Ratings,Elo rating of the home team immediately before this match (computed chronologically from all prior results in the dataset). K-factor scales with tournament importance and margin of victory.,True,Initialised at 1500 for first appearance,True,0.0
+away_elo,Elo Ratings,Elo rating of the away team immediately before this match.,True,Initialised at 1500 for first appearance,True,0.0
+elo_diff,Elo Ratings,home_elo minus away_elo. Strong continuous predictor of win probability. An Elo difference of 200 implies ~75% win probability for the stronger team.,True,N/A (always computable),True,0.0
+home_form5,Rolling Form,"Average points per game for the home team in their last 5 matches before this one (3=win, 1=draw, 0=loss). Captures recent momentum.",True,Global mean (teams with < 5 prior matches),True,0.0
+away_form5,Rolling Form,Same as home_form5 for the away team.,True,Global mean,True,0.0
+home_form10,Rolling Form,Average points per game in last 10 matches. Smooths out variance vs form5.,True,Global mean,True,0.0
+away_form10,Rolling Form,Same as home_form10 for away team.,True,Global mean,True,0.0
+home_win_rate5,Rolling Form,Win rate in last 5 matches (home team).,True,Global mean,True,0.0
+away_win_rate5,Rolling Form,Win rate in last 5 matches (away team).,True,Global mean,True,0.0
+home_draw_rate5,Rolling Form,Draw rate in last 5 matches (home).,True,Global mean,True,0.0
+away_draw_rate5,Rolling Form,Draw rate in last 5 matches (away).,True,Global mean,True,0.0
+home_win_rate10,Rolling Form,Win rate in last 10 matches (home).,True,Global mean,True,0.0
+away_win_rate10,Rolling Form,Win rate in last 10 matches (away).,True,Global mean,True,0.0
+home_draw_rate10,Rolling Form,Draw rate in last 10 matches (home).,True,Global mean,True,0.0
+away_draw_rate10,Rolling Form,Draw rate in last 10 matches (away).,True,Global mean,True,0.0
+home_gf_avg5,Goals (Rolling),"Goals scored per game, last 5 (home).",True,Global mean,True,0.0
+away_gf_avg5,Goals (Rolling),"Goals scored per game, last 5 (away).",True,Global mean,True,0.0
+home_ga_avg5,Goals (Rolling),"Goals conceded per game, last 5 (home).",True,Global mean,True,0.0
+away_ga_avg5,Goals (Rolling),"Goals conceded per game, last 5 (away).",True,Global mean,True,0.0
+home_gd_avg5,Goals (Rolling),"Goal difference per game, last 5 (home).",True,Global mean,True,0.0
+away_gd_avg5,Goals (Rolling),"Goal difference per game, last 5 (away).",True,Global mean,True,0.0
+home_gf_avg10,Goals (Rolling),"Goals scored per game, last 10 (home).",True,Global mean,True,0.0
+away_gf_avg10,Goals (Rolling),"Goals scored per game, last 10 (away).",True,Global mean,True,0.0
+home_ga_avg10,Goals (Rolling),"Goals conceded per game, last 10 (home).",True,Global mean,True,0.0
+away_ga_avg10,Goals (Rolling),"Goals conceded per game, last 10 (away).",True,Global mean,True,0.0
+home_gd_avg10,Goals (Rolling),"Goal diff per game, last 10 (home).",True,Global mean,True,0.0
+away_gd_avg10,Goals (Rolling),"Goal diff per game, last 10 (away).",True,Global mean,True,0.0
+h2h_home_wins,Head-to-Head,Win rate of home team in last 10 H2H meetings.,True,0.333 (uniform prior for unseen matchups),True,0.0
+h2h_draws,Head-to-Head,Draw rate in last 10 H2H meetings.,True,0.333,True,0.0
+h2h_away_wins,Head-to-Head,Away win rate in last 10 H2H meetings.,True,0.333,True,0.0
+h2h_home_gf_avg,Head-to-Head,Average goals scored by home team in H2H.,True,Column median,True,0.0
+h2h_away_gf_avg,Head-to-Head,Average goals scored by away team in H2H.,True,Column median,True,0.0
+h2h_total_games,Head-to-Head,Number of H2H meetings in dataset (0 = first meeting).,True,0,True,0.0
+home_advantage,Context,1 if the home team plays at their home ground (not neutral venue).,True,N/A,True,0.0
+is_neutral,Context,1 if the match is played at a neutral venue.,True,N/A,False,
+tournament_weight,Context,"Competitiveness weight 0.20–1.0. World Cup=1.0, Friendly=0.20.",True,0.40,True,0.0
+tournament_tier,Context,"Ordinal bucket 0–4 from tournament_weight. 4=Major tournament, 0=Friendly.",True,N/A,True,0.0
+is_world_cup,Context,1 if this is a FIFA World Cup match.,True,N/A,True,0.0
+home_days_rest,Context,Days since the home team's last match. Proxy for squad freshness.,True,Column median,True,0.0
+away_days_rest,Context,Days since the away team's last match.,True,Column median,True,0.0
+result,Target,"0 = home team loss, 1 = draw, 2 = home team win. Multi-class classification target.",True,N/A,True,0.0
