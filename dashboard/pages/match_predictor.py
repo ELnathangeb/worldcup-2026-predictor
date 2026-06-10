@@ -273,7 +273,7 @@ def render() -> None:
             z=matrix,
             x=[str(j) for j in range(N)],
             y=[str(i) for i in range(N)],
-            colorscale=[[0,"#0B1728"],[0.4,"#0EA5E930"],[1,"#38BDF8"]],
+            colorscale=[[0,"#0B1728"],[0.4,"rgba(14,165,233,0.19)"],[1,"#38BDF8"]],
             text=[[f"{v:.1f}%" for v in row] for row in matrix],
             texttemplate="%{text}",
             textfont={"size": 9, "color": "white"},
