@@ -1,35 +1,40 @@
-# Core data science
-pandas==2.2.2
-numpy==1.26.4
-scikit-learn==1.4.2
-scipy==1.13.0
-xgboost==2.0.3
-lightgbm==4.3.0
+# ─────────────────────────────────────────────────────────────────────────────
+# Requirements — FIFA World Cup 2026 Predictor (Streamlit Community Cloud)
+#
+# ⚠️  MODEL PICKLE COMPATIBILITY
+#   best_model.pkl was serialised with numpy 2.0.2, scikit-learn 1.6.1, and
+#   lightgbm 4.6.0.  Loading with older major/minor versions raises a hard
+#   InconsistentVersionWarning and may fail entirely.  Do NOT downgrade these
+#   three packages without first retraining the model.
+#
+# Removed from production requirements (dev-only — do not re-add):
+#   jupyter, ipykernel   → pulled in Qt/native libs that break Cloud builds
+#   pytest, pytest-cov   → testing only
+#   xgboost              → training only (LightGBM used at inference)
+#   beautifulsoup4, lxml → data-collection scripts only
+# ─────────────────────────────────────────────────────────────────────────────
 
-# Data fetching
-requests==2.31.0
-beautifulsoup4==4.12.3
-lxml==5.2.1
+# ── Model runtime (exact pins — pickle compatibility) ─────────────────────────
+numpy==2.0.2
+scikit-learn==1.6.1
+scipy==1.13.1
+lightgbm==4.6.0
+joblib==1.4.2
 
-# Visualization
-matplotlib==3.8.4
+# ── Data handling ─────────────────────────────────────────────────────────────
+pandas==2.2.3
+
+# ── Dashboard ─────────────────────────────────────────────────────────────────
+streamlit==1.44.0
+
+# ── Visualisation ─────────────────────────────────────────────────────────────
+plotly==5.24.1
+matplotlib==3.9.2
 seaborn==0.13.2
-plotly==5.21.0
+statsmodels==0.14.4
 
-# Dashboard
-streamlit>=1.35.0
-statsmodels>=0.14.0   # required for plotly trendline (OLS)
-
-# Utilities
+# ── Utilities ─────────────────────────────────────────────────────────────────
 python-dotenv==1.0.1
 tqdm==4.66.4
-joblib==1.4.0
-pyyaml==6.0.1
-
-# Testing
-pytest==8.2.0
-pytest-cov==5.0.0
-
-# Notebook support (optional)
-jupyter==1.0.0
-ipykernel==6.29.4
+pyyaml==6.0.2
+requests==2.31.0

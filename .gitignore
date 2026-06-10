@@ -56,8 +56,10 @@ outputs/run.log
 # Large data files (keep CSVs under ~10 MB, skip raw dumps)
 data/raw/*.csv
 
-# Model binaries (too large for GitHub — document how to regenerate)
-models/*.pkl
+# Model binaries — best_model.pkl (1.4 MB) and feature_columns.pkl are
+# tracked by git so Streamlit Community Cloud can load them at runtime.
+# Large models (>50 MB) should use Git LFS instead.
+# models/*.pkl   ← intentionally NOT ignored
 
 # Local secrets / API keys
 .env
