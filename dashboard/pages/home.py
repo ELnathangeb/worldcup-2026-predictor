@@ -30,14 +30,14 @@ def render() -> None:
 
     # ── KPI strip ──────────────────────────────────────────────────────────────
     c1, c2, c3, c4, c5 = st.columns(5)
-    c1.markdown(kpi(f"{len(df):,}", "Historical Matches", accent="#38BDF8"), unsafe_allow_html=True)
-    c2.markdown(kpi("48",            "WC 2026 Teams",      accent="#34D399"), unsafe_allow_html=True)
-    c3.markdown(kpi("46",            "ML Features",        accent="#A78BFA"), unsafe_allow_html=True)
-    c4.markdown(kpi(f"{tune.get('test_accuracy',0)*100:.1f}%", "Model Accuracy",
-                    delta="vs 33% random baseline", accent="#FCD34D"), unsafe_allow_html=True)
-    c5.markdown(kpi("10,000",        "MC Simulations",     accent="#F87171"), unsafe_allow_html=True)
+    c1.html(kpi(f"{len(df):,}", "Historical Matches", accent="#38BDF8"))
+    c2.html(kpi("48",            "WC 2026 Teams",      accent="#34D399"))
+    c3.html(kpi("46",            "ML Features",        accent="#A78BFA"))
+    c4.html(kpi(f"{tune.get('test_accuracy',0)*100:.1f}%", "Model Accuracy",
+                    delta="vs 33% random baseline", accent="#FCD34D"))
+    c5.html(kpi("10,000",        "MC Simulations",     accent="#F87171"))
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.html("<br>")
 
     # ── Two-column main layout ─────────────────────────────────────────────────
     left, right = st.columns([3, 2], gap="large")
@@ -81,7 +81,7 @@ def render() -> None:
                 </div>
             </div>"""
 
-        st.markdown(f"""
+        st.html(f"""
         <div class='glass-card' style='padding:8px 0;'>
             <div style='display:flex;padding:6px 16px 4px;
                         font-size:0.62rem;font-weight:700;color:#334155;
@@ -92,12 +92,12 @@ def render() -> None:
                 <div style='min-width:200px;text-align:right;'>Champion % · SF · Conf</div>
             </div>
             {rows_html}
-        </div>""", unsafe_allow_html=True)
+        </div>""")
 
     with right:
         # Model card
         section_title("Model Performance")
-        st.markdown(f"""
+        st.html(f"""
         <div class='glass-card'>
             <div style='display:grid;grid-template-columns:1fr 1fr;gap:12px;'>
                 <div class='stat-pill'>
@@ -130,7 +130,7 @@ def render() -> None:
                     &nbsp;2024 – 2026
                 </div>
             </div>
-        </div>""", unsafe_allow_html=True)
+        </div>""")
 
         # Outcome distribution donut
         section_title("Historical Outcomes")
@@ -188,15 +188,15 @@ def render() -> None:
                     <span class='grp-name'>{dot} {t}</span>
                     <span style='font-size:0.7rem;color:#475569;'>{e:.0f}</span>
                 </div>"""
-            col.markdown(f"""
+            col.html(f"""
             <div class='glass-card' style='padding:0;overflow:hidden;margin-bottom:8px;'>
                 <div class='grp-header'>Group {grp}</div>
                 {rows_html}
-            </div>""", unsafe_allow_html=True)
+            </div>""")
 
-    st.markdown("""
+    st.html("""
     <div style='text-align:center;padding:16px 0 4px;
                 font-size:0.72rem;color:#334155;'>
         Data: martj42/international-football-results · samuraitruong/fifa-ranking-data ·
         LightGBM · Elo · Poisson simulation
-    </div>""", unsafe_allow_html=True)
+    </div>""")

@@ -220,18 +220,18 @@ def kpi(value: str, label: str, delta: str = "", accent: str = "#38BDF8",
 def section_title(title: str, subtitle: str = "") -> None:
     """Render a dark section header with accent left border."""
     sub_html = f"<div style='font-size:0.8rem;color:#64748B;margin-top:3px;'>{subtitle}</div>" if subtitle else ""
-    st.markdown(f"""
+    st.html(f"""
     <div style='border-left:3px solid #38BDF8;padding-left:14px;margin:1.8rem 0 1rem;'>
         <div style='font-size:1.1rem;font-weight:700;color:#E2E8F0;
                     letter-spacing:-0.2px;'>{title}</div>
         {sub_html}
-    </div>""", unsafe_allow_html=True)
+    </div>""")
 
 
 def page_header(title: str, subtitle: str = "") -> None:
     """Render the top-of-page hero banner."""
     sub_html = f"<p style='margin:6px 0 0;opacity:0.65;font-size:0.9rem;font-weight:400;'>{subtitle}</p>" if subtitle else ""
-    st.markdown(f"""
+    st.html(f"""
     <div style='
         background:linear-gradient(135deg,#0B1728 0%,#0F2040 40%,#0A1830 100%);
         border:1px solid #1C2E4A;
@@ -246,7 +246,7 @@ def page_header(title: str, subtitle: str = "") -> None:
                    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
                    letter-spacing:-0.5px;'>⚽ {title}</h2>
         {sub_html}
-    </div>""", unsafe_allow_html=True)
+    </div>""")
 
 
 def prob_bar(label: str, pct: float, color: str = "#38BDF8") -> str:
@@ -270,7 +270,7 @@ def prob_bar(label: str, pct: float, color: str = "#38BDF8") -> str:
 # ── CSS injection ─────────────────────────────────────────────────────────────
 
 def inject_css() -> None:
-    st.markdown("""
+    st.html("""
     <style>
     /* ── Google Fonts ── */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -599,4 +599,4 @@ def inject_css() -> None:
     .stat-pill .lbl { font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
                       letter-spacing: 0.1em; color: #475569; margin-top: 2px; }
     </style>
-    """, unsafe_allow_html=True)
+    """)

@@ -52,10 +52,10 @@ def render() -> None:
             key="pred_ta",
         )
     with col_vs:
-        st.markdown(
+        st.html(
             "<div style='text-align:center;padding-top:34px;'>"
             "<span class='vs-badge'>VS</span></div>",
-            unsafe_allow_html=True,
+
         )
     with col_b:
         default_b = "France" if "France" in wc else wc[1]
@@ -75,7 +75,7 @@ def render() -> None:
     diff  = elo_a - elo_b
     grp_a, grp_b = team_group(team_a), team_group(team_b)
 
-    st.markdown(f"""
+    st.html(f"""
     <div style='display:flex;gap:12px;margin:12px 0;align-items:stretch;'>
         <div class='glass-card' style='flex:1;text-align:center;padding:14px;'>
             <div style='font-size:1.2rem;font-weight:800;color:#F1F5F9;'>{team_a}</div>
@@ -98,16 +98,16 @@ def render() -> None:
             <div style='font-size:0.68rem;color:#475569;text-transform:uppercase;
                         letter-spacing:0.1em;'>Elo · Group {grp_b}</div>
         </div>
-    </div>""", unsafe_allow_html=True)
+    </div>""")
 
     # ── Predict button ─────────────────────────────────────────────────────────
     predict_btn = st.button("⚡  Predict Match", type="primary", use_container_width=True)
 
     if not predict_btn and "last_pred" not in st.session_state:
-        st.markdown("""
+        st.html("""
         <div style='text-align:center;padding:32px;color:#334155;font-size:0.9rem;'>
             Select two teams and click <strong style='color:#38BDF8;'>Predict Match</strong>
-        </div>""", unsafe_allow_html=True)
+        </div>""")
         return
 
     if predict_btn:
@@ -134,7 +134,7 @@ def render() -> None:
     exp_a  = result["expected_goals_a"]
     exp_b  = result["expected_goals_b"]
 
-    st.markdown("---")
+    st.html("---")
 
     # ── Results layout ─────────────────────────────────────────────────────────
     left, right = st.columns([3, 2], gap="large")
@@ -143,36 +143,36 @@ def render() -> None:
         section_title("Outcome Probabilities", f"{ta} vs {tb}  ·  Neutral venue")
 
         # ML probs
-        st.markdown(
+        st.html(
             f"<div style='font-size:0.72rem;font-weight:700;color:#38BDF8;"
             f"text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;'>"
             f"ML Model (LightGBM)</div>",
-            unsafe_allow_html=True,
+
         )
-        st.markdown(
+        st.html(
             prob_bar(f"🔵 {ta} Win", p_a * 100, "#38BDF8") +
             prob_bar("⬜ Draw",       p_d * 100, "#64748B") +
             prob_bar(f"🔴 {tb} Win", p_b * 100, "#F87171"),
-            unsafe_allow_html=True,
+
         )
 
-        st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
+        st.html("<div style='height:14px;'></div>")
 
         # Elo probs
-        st.markdown(
+        st.html(
             f"<div style='font-size:0.72rem;font-weight:700;color:#A78BFA;"
             f"text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;'>"
             f"Elo Simulation Engine</div>",
-            unsafe_allow_html=True,
+
         )
-        st.markdown(
+        st.html(
             prob_bar(f"🔵 {ta} Win", ea * 100, "#A78BFA") +
             prob_bar("⬜ Draw",       ed * 100, "#64748B") +
             prob_bar(f"🔴 {tb} Win", eb * 100, "#F87171"),
-            unsafe_allow_html=True,
+
         )
 
-        st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
+        st.html("<div style='height:16px;'></div>")
 
         # ML vs Elo bar chart
         section_title("Model Comparison")
@@ -227,7 +227,7 @@ def render() -> None:
 
         # Score prediction card
         winner_color = "#38BDF8" if winner == ta else ("#F87171" if winner == tb else "#FCD34D")
-        st.markdown(f"""
+        st.html(f"""
         <div style='
             background:linear-gradient(135deg,#0B1728,#0F2040);
             border:1px solid #1C2E4A;border-top:3px solid {winner_color};
@@ -249,10 +249,10 @@ def render() -> None:
                         font-size:0.82rem;color:{winner_color};font-weight:700;'>
                 Predicted winner: {winner}
             </div>
-        </div>""", unsafe_allow_html=True)
+        </div>""")
 
         # Score probability heatmap
-        st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
+        st.html("<div style='height:16px;'></div>")
         section_title("Score Matrix", "Poisson probability distribution")
 
         from src.predict_match import _elo_neutral_probs, _expected_goals

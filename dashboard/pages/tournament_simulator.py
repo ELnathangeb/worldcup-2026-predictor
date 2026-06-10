@@ -75,7 +75,7 @@ def render() -> None:
         seed_val = st.number_input("Seed value", value=42, step=1, key="ts_seed",
                                    disabled=not use_seed, label_visibility="collapsed")
     with c_btn:
-        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+        st.html("<div style='height:8px'></div>")
         run_btn = st.button("🏆  Simulate World Cup 2026", type="primary",
                             use_container_width=True)
 
@@ -87,14 +87,14 @@ def render() -> None:
 
     result = st.session_state.get("ts_result")
     if result is None:
-        st.markdown("""
+        st.html("""
         <div style='text-align:center;padding:48px 0;'>
             <div style='font-size:2.5rem;margin-bottom:12px;'>🏆</div>
             <div style='color:#334155;font-size:0.9rem;'>
                 Click <strong style='color:#38BDF8;'>Simulate World Cup 2026</strong>
                 to run a full bracket simulation
             </div>
-        </div>""", unsafe_allow_html=True)
+        </div>""")
         return
 
     # ── Champion banner ────────────────────────────────────────────────────────
@@ -106,7 +106,7 @@ def render() -> None:
 
     flag_et = " (penalties)" if fr.after_pens else (" (aet)" if fr.after_et else "")
 
-    st.markdown(f"""
+    st.html(f"""
     <div class='champion-banner'>
         <div style='font-size:0.65rem;font-weight:800;letter-spacing:0.2em;
                     color:#FCD34D88;text-transform:uppercase;margin-bottom:10px;'>
@@ -125,9 +125,9 @@ def render() -> None:
             🥈 Runner-up: <span style='color:#94A3B8;'>{ru}</span>
             &nbsp;·&nbsp; 4th: <span style='color:#475569;'>{" · ".join(others)}</span>
         </div>
-    </div>""", unsafe_allow_html=True)
+    </div>""")
 
-    st.markdown("---")
+    st.html("---")
 
     # ── Group standings ────────────────────────────────────────────────────────
     section_title("Group Stage", "🟢 Top 2 qualify directly  ·  🔵 Best 8 third-place also advance")
@@ -141,7 +141,7 @@ def render() -> None:
         for col_idx, (grp, standings) in enumerate(grp_items[row_start:row_start+4]):
             with cols[col_idx]:
                 rows_html = _group_rows(standings, best_thirds)
-                st.markdown(f"""
+                st.html(f"""
                 <div class='glass-card' style='padding:0;overflow:hidden;margin-bottom:8px;'>
                     <div class='grp-header' style='display:flex;justify-content:space-between;'>
                         <span>GROUP {grp}</span>
@@ -149,17 +149,17 @@ def render() -> None:
                                      text-transform:none;letter-spacing:0;'>PTS  GD  P</span>
                     </div>
                     {rows_html}
-                </div>""", unsafe_allow_html=True)
+                </div>""")
 
     if best_thirds:
         thirds_html = " · ".join(
             f"<span style='color:#38BDF8;font-weight:600;'>{t}</span>"
             for t in result["best_thirds"]
         )
-        st.markdown(
+        st.html(
             f"<div style='font-size:0.78rem;color:#64748B;margin-top:4px;'>"
             f"Best 8 third-place qualifiers: {thirds_html}</div>",
-            unsafe_allow_html=True,
+
         )
 
     st.markdown("---")
@@ -187,7 +187,7 @@ def render() -> None:
                 # Full-width final card
                 winner_a = res[0].winner == res[0].team_a
                 fe = " (penalties)" if res[0].after_pens else (" (aet)" if res[0].after_et else "")
-                st.markdown(f"""
+                st.html(f"""
                 <div style='
                     background:linear-gradient(135deg,#0B1728,#1A0F2A,#0A1828);
                     border:1px solid rgba(252,211,77,0.3);border-top:3px solid #FCD34D;
@@ -215,15 +215,15 @@ def render() -> None:
                         </div>
                     </div>
                     {"<div style='text-align:center;margin-top:10px;font-size:0.8rem;color:#475569;'>" + fe + "</div>" if fe else ""}
-                </div>""", unsafe_allow_html=True)
+                </div>""")
             else:
                 # Two-column grid of match cards
                 half = len(res) // 2 or 1
                 col1, col2 = st.columns(2)
                 for mr in res[:half]:
-                    col1.markdown(_match_card_html(mr), unsafe_allow_html=True)
+                    col1.html(_match_card_html(mr))
                 for mr in res[half:]:
-                    col2.markdown(_match_card_html(mr), unsafe_allow_html=True)
+                    col2.html(_match_card_html(mr))
 
     st.markdown("---")
 

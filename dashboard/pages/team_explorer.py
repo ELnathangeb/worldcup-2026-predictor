@@ -67,7 +67,7 @@ def render() -> None:
     is_wc    = team in wc_teams
 
     # ── Team header ────────────────────────────────────────────────────────────
-    st.markdown(f"""
+    st.html(f"""
     <div style='
         background:linear-gradient(135deg,#0B1728 0%,#0F2040 60%,#0A1828 100%);
         border:1px solid #1C2E4A;border-left:4px solid {cc};
@@ -102,7 +102,7 @@ def render() -> None:
             <div class='stat-pill'><div class='val'>{stats["goals_per_game"]}</div><div class='lbl'>Goals/Game</div></div>
             <div class='stat-pill'><div class='val'>{stats["total_matches"]}</div><div class='lbl'>Matches</div></div>
         </div>
-    </div>""", unsafe_allow_html=True)
+    </div>""")
 
     # ── MC odds strip ──────────────────────────────────────────────────────────
     mc_row = mc[mc["team"] == team]
@@ -118,8 +118,8 @@ def render() -> None:
         ]
         cols = st.columns(6)
         for col, (label, val, accent) in zip(cols, stages):
-            col.markdown(kpi(f"{val:.1f}%", label, accent=accent), unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
+            col.html(kpi(f"{val:.1f}%", label, accent=accent))
+        st.html("<br>")
 
     # ── Build match history ────────────────────────────────────────────────────
     home_df = df[df["home_team"] == team].copy()
@@ -272,12 +272,12 @@ def render() -> None:
             wins_b = (h2h["result_label"] == "Loss").sum()
 
             h1, h2c, h3, h4 = st.columns(4)
-            h1.markdown(kpi(str(len(h2h)), "Meetings",         accent="#38BDF8"), unsafe_allow_html=True)
-            h2c.markdown(kpi(str(wins_a),  f"{team[:12]} Wins", accent="#34D399"), unsafe_allow_html=True)
-            h3.markdown(kpi(str(draws),    "Draws",             accent="#475569"), unsafe_allow_html=True)
-            h4.markdown(kpi(str(wins_b),   f"{opp[:12]} Wins",  accent="#F87171"), unsafe_allow_html=True)
+            h1.html(kpi(str(len(h2h)), "Meetings",         accent="#38BDF8"))
+            h2c.html(kpi(str(wins_a),  f"{team[:12]} Wins", accent="#34D399"))
+            h3.html(kpi(str(draws),    "Draws",             accent="#475569"))
+            h4.html(kpi(str(wins_b),   f"{opp[:12]} Wins",  accent="#F87171"))
 
-            st.markdown("<br>", unsafe_allow_html=True)
+            st.html("<br>")
 
             fig_h2h = go.Figure(go.Bar(
                 x=[f"{team} Wins", "Draws", f"{opp} Wins"],

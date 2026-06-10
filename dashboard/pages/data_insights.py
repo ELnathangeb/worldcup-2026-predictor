@@ -149,20 +149,15 @@ def render() -> None:
             cols = st.columns(5)
             for col, (_, row) in zip(cols, fi.head(5).iterrows()):
                 pct = row["importance"] / total * 100
-                col.markdown(kpi(f"{pct:.1f}%", row["feature"][:18], accent="#38BDF8"),
-                             unsafe_allow_html=True)
+                col.html(kpi(f"{pct:.1f}%", row["feature"][:18], accent="#38BDF8"))
 
         st.markdown("---")
         section_title("Model Summary")
         c1, c2, c3, c4 = st.columns(4)
-        c1.markdown(kpi(f"{tune.get('test_accuracy',0)*100:.2f}%", "Test Accuracy", accent="#34D399"),
-                    unsafe_allow_html=True)
-        c2.markdown(kpi(f"{tune.get('test_f1_macro',0):.4f}", "F1 Macro",     accent="#38BDF8"),
-                    unsafe_allow_html=True)
-        c3.markdown(kpi(f"{tune.get('test_log_loss',0):.4f}", "Log Loss",     accent="#F87171"),
-                    unsafe_allow_html=True)
-        c4.markdown(kpi(f"{tune.get('best_cv_f1',0):.4f}",   "Best CV F1",   accent="#A78BFA"),
-                    unsafe_allow_html=True)
+        c1.html(kpi(f"{tune.get('test_accuracy',0)*100:.2f}%", "Test Accuracy", accent="#34D399"))
+        c2.html(kpi(f"{tune.get('test_f1_macro',0):.4f}", "F1 Macro",     accent="#38BDF8"))
+        c3.html(kpi(f"{tune.get('test_log_loss',0):.4f}", "Log Loss",     accent="#F87171"))
+        c4.html(kpi(f"{tune.get('best_cv_f1',0):.4f}",   "Best CV F1",   accent="#A78BFA"))
 
     # ── Tab 2: Goal trends ─────────────────────────────────────────────────────
     with tabs[1]:

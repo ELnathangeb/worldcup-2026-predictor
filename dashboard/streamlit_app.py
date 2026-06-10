@@ -33,7 +33,7 @@ NAV_ITEMS = [
 
 with st.sidebar:
     # Logo block
-    st.markdown("""
+    st.html("""
     <div style='padding:18px 12px 12px;'>
         <div style='display:flex;align-items:center;gap:12px;'>
             <div style='width:42px;height:42px;background:linear-gradient(135deg,#0EA5E9,#7C3AED);
@@ -53,7 +53,7 @@ with st.sidebar:
                     text-transform:uppercase;letter-spacing:0.12em;
                     margin-bottom:8px;'>Navigation</div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     page = st.radio(
         "nav",
@@ -67,17 +67,17 @@ with st.sidebar:
         if f"{icon}  {label}" == page
     )
     _, _, desc = NAV_ITEMS[selected_idx]
-    st.markdown(f"""
+    st.html(f"""
     <div style='margin:4px 12px 0;padding:8px 12px;background:rgba(56,189,248,0.06);
                 border-radius:8px;border:1px solid rgba(56,189,248,0.15);'>
         <span style='font-size:0.72rem;color:#38BDF8;'>{desc}</span>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
-    st.markdown("""<hr/>""", unsafe_allow_html=True)
+    st.html("""<hr/>""")
 
     # Bottom info block
-    st.markdown("""
+    st.html("""
     <div style='padding:8px 12px 4px;'>
         <div style='font-size:0.68rem;color:#334155;line-height:1.7;'>
             <div style='color:#475569;font-weight:600;margin-bottom:4px;'>Stack</div>
@@ -88,7 +88,7 @@ with st.sidebar:
             USA · Canada · Mexico · 2026
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
 # ── Route ─────────────────────────────────────────────────────────────────────
 page_label = page.split("  ", 1)[1].strip()

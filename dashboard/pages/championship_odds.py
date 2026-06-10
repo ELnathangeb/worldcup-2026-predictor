@@ -42,16 +42,16 @@ def render() -> None:
 
     # ── KPI strip ──────────────────────────────────────────────────────────────
     k1, k2, k3, k4, k5 = st.columns(5)
-    k1.markdown(kpi("10,000",         "Simulations",     accent="#38BDF8"), unsafe_allow_html=True)
-    k2.markdown(kpi(top1["team"],      "Top Favourite",   delta=f"{top1['pct_champion']:.1f}% odds",
-                    accent="#FCD34D"), unsafe_allow_html=True)
-    k3.markdown(kpi(f"{top1['pct_semifinal']:.0f}%", f"{top1['team'][:10]} SF Rate",
-                    accent="#A78BFA"), unsafe_allow_html=True)
-    k4.markdown(kpi(f"{100/48:.1f}%", "Uniform Baseline", delta="per team if equal",
-                    accent="#475569"), unsafe_allow_html=True)
-    k5.markdown(kpi(str(len(mc)),     "WC Teams",        accent="#34D399"), unsafe_allow_html=True)
+    k1.html(kpi("10,000",         "Simulations",     accent="#38BDF8"))
+    k2.html(kpi(top1["team"],      "Top Favourite",   delta=f"{top1['pct_champion']:.1f}% odds",
+                    accent="#FCD34D"))
+    k3.html(kpi(f"{top1['pct_semifinal']:.0f}%", f"{top1['team'][:10]} SF Rate",
+                    accent="#A78BFA"))
+    k4.html(kpi(f"{100/48:.1f}%", "Uniform Baseline", delta="per team if equal",
+                    accent="#475569"))
+    k5.html(kpi(str(len(mc)),     "WC Teams",        accent="#34D399"))
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.html("<br>")
 
     tabs = st.tabs([
         "🥇 Leaderboard", "📊 All Stages", "🗺️ Confederation", "📈 Elo vs Odds", "📋 Full Table"
@@ -100,7 +100,7 @@ def render() -> None:
                     </div>
                 </div>"""
 
-            st.markdown(f"""
+            st.html(f"""
             <div class='glass-card' style='padding:8px 0;'>
                 <div style='display:flex;padding:6px 16px 6px;font-size:0.6rem;font-weight:700;
                             color:#334155;text-transform:uppercase;letter-spacing:0.1em;'>
@@ -110,7 +110,7 @@ def render() -> None:
                     <div style='min-width:180px;text-align:right;'>Champion · SF · Conf</div>
                 </div>
                 {rows_html}
-            </div>""", unsafe_allow_html=True)
+            </div>""")
 
         with col_podium:
             section_title("Podium")
@@ -120,7 +120,7 @@ def render() -> None:
                 ("🥉", mc.iloc[2], "#FB923C", "3rd Favourite"),
             ]
             for medal, row, color, sublabel in medals:
-                st.markdown(f"""
+                st.html(f"""
                 <div style='
                     background:linear-gradient(135deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));
                     border:1px solid {color}44;border-top:2px solid {color};
@@ -150,7 +150,7 @@ def render() -> None:
                             R32: <span style='color:#64748B;font-weight:600;'>{row["pct_round_of_32"]:.0f}%</span>
                         </span>
                     </div>
-                </div>""", unsafe_allow_html=True)
+                </div>""")
 
     # ── Tab 2: All stages ──────────────────────────────────────────────────────
     with tabs[1]:
@@ -226,7 +226,7 @@ def render() -> None:
             best = mc[mc["conf"] == row["conf"]].head(1).iloc[0]
             cc   = _CONF_CSS.get(row["conf"], "#475569")
             with cols_c[i]:
-                st.markdown(f"""
+                st.html(f"""
                 <div style='background:rgba(255,255,255,0.02);border:1px solid {cc}33;
                             border-top:2px solid {cc};border-radius:12px;
                             padding:14px;text-align:center;'>
@@ -240,7 +240,7 @@ def render() -> None:
                     <div style='font-size:0.65rem;color:#334155;margin-top:4px;'>
                         {int(row['n_teams'])} teams
                     </div>
-                </div>""", unsafe_allow_html=True)
+                </div>""")
 
     # ── Tab 4: Elo vs Odds ────────────────────────────────────────────────────
     with tabs[3]:
