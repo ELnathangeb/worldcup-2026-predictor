@@ -103,14 +103,61 @@ class MatchResult:
 # Core simulation helpers
 # ---------------------------------------------------------------------------
 
+def _score_for_outcome(
+    outcome: int,
+    λ_a: float,
+    λ_b: float,
+    rng: np.random.Generator,
+    max_tries: int = 60,
+) -> tuple[int, int]:
+    """
+    Rejection-sample a Poisson score consistent with *outcome*.
+
+    outcome: +1 = team_a wins, 0 = draw, -1 = team_b wins.
+
+    Because the match outcome has already been decided by the Elo model,
+    this function just samples a *plausible scoreline* for that outcome.
+    The rejection loop is fast: for typical λ values it converges in < 5 tries.
+    """
+    for _ in range(max_tries):
+        g_a = min(int(rng.poisson(λ_a)), 7)
+        g_b = min(int(rng.poisson(λ_b)), 7)
+        if outcome == 1  and g_a > g_b: return g_a, g_b
+        if outcome == 0  and g_a == g_b: return g_a, g_b
+        if outcome == -1 and g_b > g_a:  return g_a, g_b
+
+    # Fallback (very rare): construct a minimal consistent score
+    if outcome == 1:
+        return max(1, round(λ_a)), max(0, round(λ_b) - 1)
+    if outcome == -1:
+        return max(0, round(λ_a) - 1), max(1, round(λ_b))
+    g = max(0, round((λ_a + λ_b) / 2))
+    return g, g
+
+
 def _simulate_group_match(
     team_a: str,
     team_b: str,
     rng: np.random.Generator,
 ) -> MatchResult:
-    """Simulate one group-stage match (draw is a valid outcome)."""
-    _, _, _, λ_a, λ_b = get_matchup(team_a, team_b)
-    g_a, g_b = sample_score(λ_a, λ_b, rng=rng)
+    """
+    Simulate one group-stage match (draw is a valid outcome).
+
+    Outcome is sampled directly from Elo win probabilities so that Elo
+    strength strongly determines who wins.  A Poisson-consistent scoreline
+    is then sampled by rejection to give realistic goals-for/against numbers.
+    """
+    p_a_win, p_draw, p_b_win, λ_a, λ_b = get_matchup(team_a, team_b)
+
+    r = rng.random()
+    if r < p_a_win:
+        outcome = 1
+    elif r < p_a_win + p_draw:
+        outcome = 0
+    else:
+        outcome = -1
+
+    g_a, g_b = _score_for_outcome(outcome, λ_a, λ_b, rng)
     return MatchResult(team_a=team_a, team_b=team_b, goals_a=g_a, goals_b=g_b)
 
 
@@ -121,33 +168,53 @@ def _simulate_knockout_match(
 ) -> MatchResult:
     """
     Knockout match — must have a winner.
-    After 90 min draw → extra time coin flip (slight momentum effect) →
-    if still level → penalty shootout (50/50 with slight skill tilt).
+
+    Outcome (90 min) is sampled from Elo probabilities.
+    Draw → extra time (Elo-weighted, 30 min scale) → if still level → pens.
     """
-    _, _, _, λ_a, λ_b = get_matchup(team_a, team_b)
-    g_a, g_b  = sample_score(λ_a, λ_b, rng=rng)
+    p_a_win, p_draw, p_b_win, λ_a, λ_b = get_matchup(team_a, team_b)
+
+    # ── 90 minutes ──────────────────────────────────────────────────────────
+    r = rng.random()
+    if r < p_a_win:
+        outcome = 1
+    elif r < p_a_win + p_draw:
+        outcome = 0
+    else:
+        outcome = -1
+
+    g_a, g_b = _score_for_outcome(outcome, λ_a, λ_b, rng)
 
     after_et   = False
     after_pens = False
     pen_winner = None
 
-    if g_a == g_b:
+    if outcome == 0:                        # 90-min draw → extra time
         after_et = True
-        # Extra time: scale Poisson rates to 30 min
         et_λ_a = λ_a * (30 / 90)
         et_λ_b = λ_b * (30 / 90)
-        et_a, et_b = sample_score(et_λ_a, et_λ_b, rng=rng)
+
+        # ET outcome: Elo advantage still applies, but goal rates are lower
+        # (compressed Poisson naturally produces more 0-0 ET → pens)
+        et_r = rng.random()
+        if et_r < p_a_win * (30 / 90):
+            et_outcome = 1
+        elif et_r > 1.0 - p_b_win * (30 / 90):
+            et_outcome = -1
+        else:
+            et_outcome = 0                  # still level → penalties
+
+        et_a, et_b = _score_for_outcome(et_outcome, et_λ_a, et_λ_b, rng)
         g_a += et_a
         g_b += et_b
 
-        if g_a == g_b:
-            # Penalty shootout — slightly biased by Elo strength
+        if et_outcome == 0:                 # penalties
             from src.predict_match import _load_elo
-            elo = _load_elo()
-            e_a = elo.get(team_a, 1500.0)
-            e_b = elo.get(team_b, 1500.0)
-            # Elo-weighted penalty win probability (compress toward 50%)
-            p_a_pens = 0.5 + 0.5 * (e_a - e_b) / (e_a + e_b - 2 * 1000)
+            elo_ratings = _load_elo()
+            e_a = elo_ratings.get(team_a, 1500.0)
+            e_b = elo_ratings.get(team_b, 1500.0)
+            # Elo-weighted penalty probability (capped 30–70 %: pens ≈ 50/50)
+            p_a_pens = 0.5 + 0.5 * (e_a - e_b) / max(1.0, e_a + e_b - 2_000)
             p_a_pens = float(np.clip(p_a_pens, 0.30, 0.70))
             after_pens = True
             pen_winner = team_a if rng.random() < p_a_pens else team_b

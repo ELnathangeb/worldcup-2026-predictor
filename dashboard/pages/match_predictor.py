@@ -113,13 +113,15 @@ def render() -> None:
     if predict_btn:
         with st.spinner("Running prediction..."):
             result = _get_prediction(team_a, team_b)
-        st.session_state["last_pred"] = result
-        st.session_state["pred_ta"]   = team_a
-        st.session_state["pred_tb"]   = team_b
+        st.session_state["last_pred"]    = result
+        # Use separate keys (not bound to widgets) to avoid the
+        # "cannot modify after widget instantiation" error
+        st.session_state["last_pred_ta"] = team_a
+        st.session_state["last_pred_tb"] = team_b
 
     result = st.session_state.get("last_pred", {})
-    ta     = st.session_state.get("pred_ta", team_a)
-    tb     = st.session_state.get("pred_tb", team_b)
+    ta     = st.session_state.get("last_pred_ta", team_a)
+    tb     = st.session_state.get("last_pred_tb", team_b)
     if not result:
         return
 
@@ -134,7 +136,7 @@ def render() -> None:
     exp_a  = result["expected_goals_a"]
     exp_b  = result["expected_goals_b"]
 
-    st.html("---")
+    st.markdown("---")
 
     # ── Results layout ─────────────────────────────────────────────────────────
     left, right = st.columns([3, 2], gap="large")

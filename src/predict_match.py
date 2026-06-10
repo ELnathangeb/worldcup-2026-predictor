@@ -396,16 +396,18 @@ def _expected_goals(
     ref_win  = 0.33
     ref_loss = 0.33
 
-    # Scale factor: how much stronger is team A than average?
-    strength_a = max(0.5, prob_a_win / ref_win) ** 0.35
-    strength_b = max(0.5, prob_b_win / ref_loss) ** 0.35
+    # Stronger scaling so elite teams get higher λ and weak teams get lower λ.
+    # Exponent 0.55 (was 0.35) and a lower floor 0.25 (was 0.50) give a wider
+    # spread of expected-goals while staying in realistic score territory.
+    strength_a = max(0.25, prob_a_win / ref_win) ** 0.55
+    strength_b = max(0.25, prob_b_win / ref_loss) ** 0.55
 
     λ_a = base_a * strength_a
     λ_b = base_b * strength_b
 
-    # Mild regression to mean (avoids 5-0 scorelines from p=0.85 predictions)
-    λ_a = 0.75 * λ_a + 0.25 * base_a
-    λ_b = 0.75 * λ_b + 0.25 * base_b
+    # Light regression to mean (15 % instead of 25 %) – keeps extreme λ intact
+    λ_a = 0.85 * λ_a + 0.15 * base_a
+    λ_b = 0.85 * λ_b + 0.15 * base_b
 
     return round(λ_a, 3), round(λ_b, 3)
 
