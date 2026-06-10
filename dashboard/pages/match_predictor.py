@@ -37,7 +37,7 @@ def _get_prediction(team_a: str, team_b: str) -> dict:
 
 
 def render() -> None:
-    page_header("Match Predictor", "ML model + Elo engine probabilities for any WC 2026 fixture")
+    page_header("Match Predictor", "Blended prediction (70% Elo + 30% ML) for any WC 2026 fixture")
 
     elo = load_elo()
     wc  = all_wc_teams()
@@ -144,11 +144,11 @@ def render() -> None:
     with left:
         section_title("Outcome Probabilities", f"{ta} vs {tb}  ·  Neutral venue")
 
-        # ML probs
+        # Blended probs (primary — 70% Elo + 30% ML)
         st.html(
             f"<div style='font-size:0.72rem;font-weight:700;color:#38BDF8;"
             f"text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;'>"
-            f"ML Model (LightGBM)</div>",
+            f"Blended Prediction (70% Elo · 30% ML)</div>",
 
         )
         st.html(
@@ -160,11 +160,11 @@ def render() -> None:
 
         st.html("<div style='height:14px;'></div>")
 
-        # Elo probs
+        # Pure Elo probs
         st.html(
             f"<div style='font-size:0.72rem;font-weight:700;color:#A78BFA;"
             f"text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;'>"
-            f"Elo Simulation Engine</div>",
+            f"Elo Engine</div>",
 
         )
         st.html(
@@ -181,7 +181,7 @@ def render() -> None:
         outcomes = [f"{ta[:10]} Win", "Draw", f"{tb[:10]} Win"]
         fig_cmp = go.Figure()
         fig_cmp.add_trace(go.Bar(
-            name="ML Model", x=outcomes, y=[p_a*100, p_d*100, p_b*100],
+            name="Blended (70% Elo · 30% ML)", x=outcomes, y=[p_a*100, p_d*100, p_b*100],
             marker=dict(color=["#38BDF8","#475569","#F87171"], line=dict(width=0)),
             text=[f"{v*100:.1f}%" for v in [p_a, p_d, p_b]],
             textposition="outside", textfont=dict(color="#64748B", size=11),

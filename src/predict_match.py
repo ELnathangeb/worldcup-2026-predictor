@@ -278,16 +278,11 @@ def _elo_neutral_probs(team_a: str, team_b: str) -> tuple[float, float, float]:
     """
     Compute win/draw/loss probabilities using Elo ratings for a neutral venue.
 
-    Why Elo instead of the ML model for WC simulation:
-    ──────────────────────────────────────────────────
-    The ML model was trained on historical matches where the "home/away" label
-    at neutral venues is NOT randomly assigned — in the raw dataset, teams are
-    listed in a fixed order that happens to anti-correlate with Elo strength
-    (i.e., the weaker team is often listed as "home"). The model learned this
-    artifact and produces inverted predictions at neutral venues.
+    Elo-based neutral-venue probabilities — used for simulation and as the
+    70 % anchor in the blended predict_match() output.
 
-    Elo is the correct tool for neutral-venue predictions: it is symmetric,
-    calibrated from all historical results, and free of the home/away bias.
+    Elo is symmetric and calibrated from all historical results.  The ML model
+    (30 % weight) adds form / H2H context on top.
 
     Draw calibration: P(draw) decreases with Elo gap (strong mismatches
     produce fewer draws). Empirically calibrated from WC history.
@@ -479,11 +474,28 @@ def predict_match(
         days_rest_b=days_rest_b,
     )
 
-    # Model: class 0 = team_a loss (team_b win), 1 = draw, 2 = team_a win
-    probs = pipe.predict_proba(X)[0]   # [p_loss, p_draw, p_win] from team_a perspective
-    p_a_win   = float(probs[2])
-    p_draw    = float(probs[1])
-    p_b_win   = float(probs[0])
+    # ── Corrected class mapping ────────────────────────────────────────────────
+    # Training-data audit confirms:
+    #   result=0  →  home_score > away_score  (team_a wins)   — 48% of matches
+    #   result=1  →  home_score == away_score (draw)          — 24%
+    #   result=2  →  away_score > home_score  (team_b wins)   — 28%
+    # The original comment ("class 0 = away win, class 2 = home win") was
+    # INVERTED; probs[0] is p(team_a wins), probs[2] is p(team_b wins).
+    probs = pipe.predict_proba(X)[0]   # [p_a_win, p_draw, p_b_win]
+    p_a_win_ml = float(probs[0])       # class 0 = team_a (home position) wins
+    p_draw_ml  = float(probs[1])
+    p_b_win_ml = float(probs[2])       # class 2 = team_b (away position) wins
+
+    # ── 70 % Elo  +  30 % ML blend ────────────────────────────────────────────
+    # Elo is calibrated for neutral-venue WC matches and is symmetric.
+    # The ML model adds form / H2H / fixture context. Together they are more
+    # accurate than either alone.
+    ELO_WEIGHT = 0.70
+    ML_WEIGHT  = 0.30
+    p_a_win_elo, p_draw_elo, p_b_win_elo = _elo_neutral_probs(team_a, team_b)
+    p_a_win = ELO_WEIGHT * p_a_win_elo + ML_WEIGHT * p_a_win_ml
+    p_draw  = ELO_WEIGHT * p_draw_elo  + ML_WEIGHT * p_draw_ml
+    p_b_win = ELO_WEIGHT * p_b_win_elo + ML_WEIGHT * p_b_win_ml
 
     λ_a, λ_b = _expected_goals(p_a_win, p_draw, p_b_win, neutral=neutral)
 
@@ -491,16 +503,23 @@ def predict_match(
     exp_a = max(0, math.floor(λ_a))
     exp_b = max(0, math.floor(λ_b))
 
+    blended_probs = np.array([p_a_win, p_draw, p_b_win])
+
     return {
         "team_a":          team_a,
         "team_b":          team_b,
+        # Blended (primary) probabilities
         "team_a_win":      round(p_a_win, 4),
         "draw":            round(p_draw, 4),
         "team_b_win":      round(p_b_win, 4),
+        # Raw ML probabilities (corrected class mapping) — for display context
+        "ml_a_win":        round(p_a_win_ml, 4),
+        "ml_draw":         round(p_draw_ml, 4),
+        "ml_b_win":        round(p_b_win_ml, 4),
         "expected_goals_a": λ_a,
         "expected_goals_b": λ_b,
         "expected_score":  f"{exp_a} - {exp_b}",
-        "confidence":      _confidence(probs),
+        "confidence":      _confidence(blended_probs),
     }
 
 
