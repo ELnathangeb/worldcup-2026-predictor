@@ -1,39 +1,37 @@
-# ─────────────────────────────────────────────────────────────────────────────
-# Requirements — FIFA World Cup 2026 Predictor (Streamlit Community Cloud)
+# Requirements -- FIFA World Cup 2026 Predictor (Streamlit Community Cloud)
 #
-# ⚠️  MODEL PICKLE COMPATIBILITY
-#   best_model.pkl was serialised with numpy 2.0.2, scikit-learn 1.6.1, and
-#   lightgbm 4.6.0.  Loading with older major/minor versions raises a hard
-#   InconsistentVersionWarning and may fail entirely.  Do NOT downgrade these
-#   three packages without first retraining the model.
+# MODEL PICKLE COMPATIBILITY
+#   best_model.pkl was serialised with numpy 2.0.2, scikit-learn 1.6.1,
+#   lightgbm 4.6.0. Loading with older major/minor versions raises
+#   InconsistentVersionWarning and may fail. Do NOT downgrade these three
+#   packages without retraining the model.
 #
-# Removed from production requirements (dev-only — do not re-add):
-#   jupyter, ipykernel   → pulled in Qt/native libs that break Cloud builds
-#   pytest, pytest-cov   → testing only
-#   xgboost              → training only (LightGBM used at inference)
-#   beautifulsoup4, lxml → data-collection scripts only
-# ─────────────────────────────────────────────────────────────────────────────
+# Dev-only packages intentionally excluded:
+#   jupyter, ipykernel  -- Qt deps break Cloud builds
+#   pytest, pytest-cov  -- testing only
+#   xgboost             -- training only
+#   beautifulsoup4, lxml -- data collection only
 
-# ── Model runtime (exact pins — pickle compatibility) ─────────────────────────
+# Model runtime (exact pins -- pickle compatibility)
 numpy==2.0.2
 scikit-learn==1.6.1
 scipy==1.13.1
 lightgbm==4.6.0
 joblib==1.4.2
 
-# ── Data handling ─────────────────────────────────────────────────────────────
+# Data handling
 pandas==2.2.3
 
-# ── Dashboard ─────────────────────────────────────────────────────────────────
+# Dashboard
 streamlit==1.44.0
 
-# ── Visualisation ─────────────────────────────────────────────────────────────
+# Visualisation
 plotly==5.24.1
 matplotlib==3.9.2
 seaborn==0.13.2
 statsmodels==0.14.4
 
-# ── Utilities ─────────────────────────────────────────────────────────────────
+# Utilities
 python-dotenv==1.0.1
 tqdm==4.66.4
 pyyaml==6.0.2
